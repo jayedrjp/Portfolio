@@ -9,12 +9,10 @@
   if (!loader) return;
 
   function getNavigationType() {
-    // Modern API
     const entries =
       performance.getEntriesByType &&
       performance.getEntriesByType("navigation");
-    if (entries && entries.length) return entries[0].type; // 'navigate' | 'reload' | 'back_forward' | 'prerender'
-    // Legacy fallback
+    if (entries && entries.length) return entries[0].type;
     if (performance.navigation) {
       const legacyMap = { 0: "navigate", 1: "reload", 2: "back_forward" };
       return legacyMap[performance.navigation.type] || "navigate";
@@ -25,19 +23,13 @@
   function shouldShowLoader() {
     const navType = getNavigationType();
 
-    // Explicit browser refresh (F5 / Ctrl+R) always shows the loader
     if (navType === "reload") {
       sessionStorage.setItem("arj-visited", "1");
       return true;
     }
 
-    // Back/forward navigation between already-visited pages: instant, no loader
     if (navType === "back_forward") return false;
 
-    // Regular navigation: only show the loader if this is the very first
-    // page loaded in this browser tab/session. Every internal link click
-    // after that is a normal 'navigate' too, but the session flag will
-    // already be set, so it's skipped.
     if (!sessionStorage.getItem("arj-visited")) {
       sessionStorage.setItem("arj-visited", "1");
       return true;
@@ -52,22 +44,129 @@
       .forEach((el) => el.classList.add("in"));
   }
 
-  if (shouldShowLoader()) {
-    // Fresh load: run the existing loader animation, unchanged
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        loader.classList.add("hide");
-        setTimeout(() => {
-          loader.style.display = "none";
-        }, 700);
-        revealHero();
-      }, 1600);
-    });
-  } else {
-    // Internal navigation: skip the loader entirely, instant page transition
+  if (!shouldShowLoader()) {
     loader.style.display = "none";
     revealHero();
+    return;
   }
+
+  // Animation timeline breakdown from assets/portfolio-loader.svg (dur = 6s):
+  // 1. 0s to 0.208s (keyTime 0.034722): Idle initial delay
+  // 2. 0.208s to 2.500s (keyTime 0.416667): "HELLO" stroke drawing animation (reaches "99 1")
+  // 3. 2.500s to 3.108s (keyTime 0.518056): Path 'd' finishes settling into final shape
+  // 4. 3.108s to 4.158s (keyTime 0.693056): Complete "HELLO" text is fully rendered and static
+  // 5. 4.158s to 5.750s: Stroke undraws (erasing)
+  // Target duration to complete the full "HELLO" text/logo animation: ~3108ms
+  let svgAnimDuration = 3108; // ms
+
+  const loaderImg = loader.querySelector(".loader-svg, img");
+  const loaderSvg = loader.querySelector("svg");
+
+  // Attempt to parse dynamic duration if SVG is inspectable
+  if (loaderSvg) {
+    try {
+      const dAnim = loaderSvg.querySelector('animate[attributeName="d"]');
+      const durAttr = dAnim ? dAnim.getAttribute("dur") : null;
+      const keyTimesAttr = dAnim ? dAnim.getAttribute("keyTimes") : null;
+      if (durAttr && keyTimesAttr) {
+        const durSec = parseFloat(durAttr);
+        const times = keyTimesAttr.split(";").map((t) => parseFloat(t.trim()));
+        if (durSec > 0 && times.length >= 3 && !isNaN(times[2])) {
+          svgAnimDuration = Math.round(times[2] * durSec * 1000);
+        }
+      }
+    } catch (_) {}
+  } else if (loaderImg && loaderImg.src && window.fetch) {
+    fetch(loaderImg.src)
+      .then((res) => (res.ok ? res.text() : ""))
+      .then((svgText) => {
+        if (!svgText) return;
+        const durMatch = svgText.match(/dur="(\d+(?:\.\d+)?)(s|ms)"/);
+        const dMatch = svgText.match(/attributeName="d"[^>]*keyTimes="([^"]+)"/);
+        if (durMatch && dMatch) {
+          const totalMs = parseFloat(durMatch[1]) * (durMatch[2] === "s" ? 1000 : 1);
+          const times = dMatch[1].split(";").map((t) => parseFloat(t.trim()));
+          if (times.length >= 3 && !isNaN(times[2])) {
+            svgAnimDuration = Math.round(times[2] * totalMs);
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  // Determine when the SVG animation started
+  let animStartTime = 0;
+  function getAnimStartTime() {
+    if (window.performance && performance.getEntriesByName && loaderImg && loaderImg.src) {
+      const entries = performance.getEntriesByName(loaderImg.src);
+      if (entries.length && entries[0].responseEnd > 0) {
+        return entries[0].responseEnd;
+      }
+    }
+    return 0;
+  }
+
+  if (loaderImg && !loaderImg.complete) {
+    loaderImg.addEventListener("load", () => {
+      animStartTime = performance.now();
+    });
+  } else {
+    animStartTime = getAnimStartTime();
+  }
+
+  let pageLoaded = document.readyState === "complete";
+  if (!pageLoaded) {
+    window.addEventListener("load", () => {
+      pageLoaded = true;
+    });
+  }
+
+  let dismissed = false;
+  function dismissLoader() {
+    if (dismissed) return;
+    dismissed = true;
+
+    // Pause SVG if inline to keep "HELLO" visibly frozen during fade-out
+    if (loaderSvg && typeof loaderSvg.pauseAnimations === "function") {
+      loaderSvg.pauseAnimations();
+    }
+
+    // Start smooth fade-out
+    loader.classList.add("hide");
+    revealHero();
+
+    const onTransitionEnd = () => {
+      loader.style.display = "none";
+      loader.removeEventListener("transitionend", onTransitionEnd);
+    };
+
+    loader.addEventListener("transitionend", onTransitionEnd);
+    // Fallback in case transitionend does not fire or is interrupted
+    setTimeout(onTransitionEnd, 700);
+  }
+
+  function checkSync() {
+    if (dismissed) return;
+
+    let animElapsed = 0;
+    if (loaderSvg && typeof loaderSvg.getCurrentTime === "function") {
+      animElapsed = loaderSvg.getCurrentTime() * 1000;
+    } else {
+      const now = performance.now();
+      animElapsed = now - animStartTime;
+    }
+
+    // Must wait for both:
+    // 1. Page main content to be loaded
+    // 2. The entire "HELLO" animation to complete
+    if (pageLoaded && animElapsed >= svgAnimDuration) {
+      dismissLoader();
+    } else {
+      requestAnimationFrame(checkSync);
+    }
+  }
+
+  requestAnimationFrame(checkSync);
 })();
 
 // ===== THEME TOGGLE =====
@@ -77,28 +176,32 @@ const sunIcon = document.getElementById("sunIcon");
 const moonIcon = document.getElementById("moonIcon");
 
 function setTheme(dark) {
+  htmlEl.style.colorScheme = dark ? "dark" : "light";
+
   if (dark) {
     htmlEl.classList.add("dark");
     htmlEl.classList.remove("light");
-    sunIcon.classList.add("hidden");
-    moonIcon.classList.remove("hidden");
+    if (sunIcon) sunIcon.classList.add("hidden");
+    if (moonIcon) moonIcon.classList.remove("hidden");
   } else {
     htmlEl.classList.remove("dark");
     htmlEl.classList.add("light");
-    moonIcon.classList.add("hidden");
-    sunIcon.classList.remove("hidden");
+    if (moonIcon) moonIcon.classList.add("hidden");
+    if (sunIcon) sunIcon.classList.remove("hidden");
   }
+
   localStorage.setItem("arj-theme", dark ? "dark" : "light");
 }
 
-// Load saved theme
 const saved = localStorage.getItem("arj-theme");
-setTheme(saved !== "light");
+setTheme(saved === "dark");
 
-themeToggle.addEventListener("click", () => {
-  const isDark = htmlEl.classList.contains("dark");
-  setTheme(!isDark);
-});
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const isDark = htmlEl.classList.contains("dark");
+    setTheme(!isDark);
+  });
+}
 
 // ===== NAVBAR SCROLL =====
 const navbar = document.getElementById("navbar");
@@ -150,18 +253,88 @@ function updateActiveNav() {
 }
 
 // ===== SMOOTH SCROLL =====
-document.querySelectorAll('a[href^="#"]').forEach((a) => {
-  a.addEventListener("click", (e) => {
-    const href = a.getAttribute("href");
-    if (href === "#") return;
-    const target = document.querySelector(href);
-    if (target) {
+function scrollToElement(target) {
+  if (!target) return;
+  const navbarHeight = 80;
+  const targetPosition =
+    target.getBoundingClientRect().top + window.scrollY - navbarHeight;
+  window.scrollTo({
+    top: Math.max(0, targetPosition),
+    behavior: "smooth",
+  });
+}
+
+// Handle all link clicks for in-page smooth scrolling across all pages
+document.addEventListener("click", (e) => {
+  const link = e.target.closest("a");
+  if (!link) return;
+
+  const href = link.getAttribute("href");
+  if (!href || href === "#") return;
+
+  // Check if link points to an anchor on the current page
+  let targetId = null;
+  if (href.startsWith("#")) {
+    targetId = href.slice(1);
+  } else {
+    try {
+      const url = new URL(link.href, window.location.href);
+      const currentPath = window.location.pathname.replace(/\/$/, "");
+      const linkPath = url.pathname.replace(/\/$/, "");
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        (linkPath === currentPath ||
+          linkPath.endsWith("/" + currentPath.split("/").pop()))
+      ) {
+        targetId = url.hash.slice(1);
+      }
+    } catch (_) {}
+  }
+
+  if (targetId) {
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
       e.preventDefault();
-      const offset = target.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: offset, behavior: "smooth" });
+
+      // Close mobile menu if open
+      if (mobileMenu && mobileMenu.classList.contains("open")) {
+        mobileMenu.classList.remove("open");
+        if (menuBtn) menuBtn.classList.remove("open");
+      }
+
+      scrollToElement(targetEl);
+
+      if (history.pushState) {
+        history.pushState(null, "", "#" + targetId);
+      }
+    }
+  }
+});
+
+// Scroll indicator on hero
+const scrollIndicator = document.querySelector(".scroll-indicator");
+if (scrollIndicator) {
+  scrollIndicator.addEventListener("click", () => {
+    const nextSection =
+      document.getElementById("about") ||
+      document.querySelector("section:nth-of-type(2)");
+    if (nextSection) {
+      scrollToElement(nextSection);
     }
   });
-});
+}
+
+// Handle smooth scroll on initial load if URL has an anchor hash
+if (window.location.hash) {
+  const initialHash = window.location.hash.slice(1);
+  const initialTarget = document.getElementById(initialHash);
+  if (initialTarget) {
+    setTimeout(() => {
+      scrollToElement(initialTarget);
+    }, 400);
+  }
+}
 
 // ===== TYPING EFFECT =====
 const roles = [
@@ -358,41 +531,6 @@ if (submitBtn) {
   });
 }
 
-// ===== MAGNETIC BUTTONS =====
-document.querySelectorAll(".magnetic-btn").forEach((btn) => {
-  btn.addEventListener("mouseenter", () => {
-    btn.style.transition = "transform 0.15s ease-out";
-  });
-  btn.addEventListener("mousemove", (e) => {
-    const rect = btn.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    btn.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px) scale(1.04)`;
-  });
-  btn.addEventListener("mouseleave", () => {
-    btn.style.transition = "transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)";
-    btn.style.transform = "";
-  });
-});
-
-// ===== 3D CARD TILT =====
-document
-  .querySelectorAll(".project-card, .service-card, .stat-card")
-  .forEach((card) => {
-    card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      card.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateY(-5px)`;
-    });
-    card.addEventListener("mouseleave", () => {
-      card.style.transform = "";
-      card.style.transition = "transform 0.4s ease";
-      setTimeout(() => {
-        card.style.transition = "";
-      }, 400);
-    });
-  });
 
 // ===== REDUCE MOTION =====
 if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {

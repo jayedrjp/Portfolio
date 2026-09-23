@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -65,26 +65,29 @@
       };
     </script>
 
+    <script>
+      (function () {
+        try {
+          const savedTheme = localStorage.getItem("arj-theme");
+          const shouldUseDark = savedTheme === "dark";
+          document.documentElement.classList.toggle("dark", shouldUseDark);
+          document.documentElement.classList.toggle("light", !shouldUseDark);
+          document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+        } catch (error) {}
+      })();
+    </script>
+
     <link rel="stylesheet" href="style.css" />
   </head>
   <body class="overflow-x-hidden">
     <!-- Loading Screen -->
-    <div
-      id="loader"
-      class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0a0a0f]"
-    >
-      <div class="loader-content text-center">
-        <div
-          class="loader-logo font-display font-bold text-4xl text-white mb-6"
-        >
-          <span class="text-accent">AR</span>J
-        </div>
-        <div class="loader-bar">
-          <div class="loader-fill"></div>
-        </div>
-        <p class="font-mono text-xs text-white/40 mt-4">
-          Initializing experience...
-        </p>
+    <div id="loader" class="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div class="loader-content">
+        <img
+          src="assets/portfolio-loader.svg"
+          alt="Loading portfolio"
+          class="loader-svg"
+        />
       </div>
     </div>
 
@@ -255,7 +258,7 @@
       <div class="edu-panel">
         <div class="edu-header">
           <div>
-            <h2 class="font-display text-3xl md:text-4xl font-bold">
+            <h2 class="font-display text-3xl md:text-4xl font-extrabold italic tracking-tight uppercase">
               Academic Journey
             </h2>
           </div>
@@ -332,7 +335,6 @@
     >
       <!-- Background Elements -->
       <div class="hero-bg">
-        <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
         <div class="grid-bg"></div>
@@ -355,9 +357,6 @@
             </h1>
 
             <div class="role-wrapper mb-6">
-              <span class="role-prefix text-white/50 font-mono text-lg"
-                >//
-              </span>
               <span
                 id="typingText"
                 class="typed-text font-display text-xl font-semibold text-accent"
@@ -371,7 +370,7 @@
               functionality.
             </p>
 
-            <div class="flex flex-wrap gap-4 mb-10">
+            <div class="flex flex-wrap items-center gap-4 mb-10">
               <a href="pages/projects.html" class="btn-primary magnetic-btn">
                 <span>View Projects</span>
                 <svg
@@ -387,9 +386,6 @@
                     d="M17 8l4 4m0 0l-4 4m4-4H3"
                   />
                 </svg>
-              </a>
-              <a href="pages/contact.html" class="btn-secondary magnetic-btn">
-                <span>Hire Me</span>
               </a>
               <a
                 href="Abdur_Rahman_Jayed.pdf"
@@ -459,53 +455,15 @@
             </div>
           </div>
 
-          <!-- RIGHT - Photo -->
+          <!-- RIGHT - Hero Portrait -->
           <div class="hero-right reveal-right">
-            <div class="photo-container">
-              <div class="photo-glow"></div>
-              <div class="photo-ring photo-ring-1"></div>
-              <div class="photo-ring photo-ring-2"></div>
-              <div class="photo-wrap">
-                <img
-                  src="arj.png"
-                  alt="Abdur Rahman Jayed"
-                  class="hero-photo"
-                  loading="eager"
-                />
-              </div>
-              <!-- Floating badges -->
-              <div class="float-badge badge-top-right">
-                <span class="badge-dot"></span>
-                Available for work
-              </div>
-              <div class="float-badge badge-bottom-left">
-                <svg
-                  class="w-4 h-4 text-accent"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                  />
-                </svg>
-                Full Stack Dev
-              </div>
-              <!-- Tech orbit dots -->
-              <div class="orbit-dot orbit-dot-1">
-                <span class="font-mono text-xs font-bold text-accent">JS</span>
-              </div>
-              <div class="orbit-dot orbit-dot-2">
-                <span class="font-mono text-xs font-bold text-emerald-400"
-                  >Node</span
-                >
-              </div>
-              <div class="orbit-dot orbit-dot-3">
-                <span class="font-mono text-xs font-bold text-sky-400">DB</span>
-              </div>
+            <div class="hero-portrait-stage">
+              <img
+                src="assets/hero-portrait.png"
+                alt="Abdur Rahman Jayed"
+                class="hero-portrait-img"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
@@ -525,7 +483,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">Who I Am</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             About <span class="text-accent">Me</span>
           </h2>
         </div>
@@ -583,7 +541,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">What I Know</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             My <span class="text-accent">Skills</span>
           </h2>
         </div>
@@ -706,6 +664,18 @@
                   <div class="skill-fill" data-w="75"></div>
                 </div>
               </div>
+              <div class="skill-item">
+                <span class="skill-name">Firebase</span>
+                <div class="skill-bar">
+                  <div class="skill-fill" data-w="80"></div>
+                </div>
+              </div>
+              <div class="skill-item">
+                <span class="skill-name">Supabase</span>
+                <div class="skill-bar">
+                  <div class="skill-fill" data-w="78"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -765,7 +735,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">My Work</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             Featured <span class="text-accent">Projects</span>
           </h2>
           <p class="section-sub">10+ Successfully Completed Projects</p>
@@ -990,9 +960,19 @@
           <!-- Project 5 -->
           <div class="project-card reveal-up" style="--delay: 1">
             <div class="project-img-wrap">
-              <div class="project-img project-img-5">
+              <div
+                class="project-img project-img-5"
+                style="
+                  background-image: url(&quot;assets/jackpot-bangladesh.png&quot;);
+                "
+              >
                 <div class="project-overlay">
-                  <a href="#" class="project-link"
+                  <a
+                    href="https://jackpot-bangladesh.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="project-link"
+                    aria-label="Live Demo"
                     ><svg
                       class="w-5 h-5"
                       fill="none"
@@ -1006,7 +986,12 @@
                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                       /></svg
                   ></a>
-                  <a href="#" class="project-link"
+                  <a
+                    href="https://github.com/jayedrjp/Jackpot_Bangladesh.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="project-link"
+                    aria-label="GitHub"
                     ><svg
                       class="w-5 h-5"
                       fill="currentColor"
@@ -1020,35 +1005,97 @@
               </div>
             </div>
             <div class="project-content">
-              <h3 class="project-name">E-Commerce Website</h3>
+              <h3 class="project-name">Jackpot Bangladesh</h3>
               <p class="project-desc">
-                Online Shopping Platform with full cart, auth, and product
-                management functionality.
+                Modern restaurant ordering platform featuring a dynamic food
+                menu, cart, online ordering, and admin management dashboard.
               </p>
               <div class="project-tags">
-                <span class="project-tag">JavaScript</span>
-                <span class="project-tag">Node.js</span>
-                <span class="project-tag">MySQL</span>
+                <span class="project-tag">Next.js</span>
+                <span class="project-tag">TypeScript</span>
+                <span class="project-tag">Tailwind</span>
               </div>
             </div>
           </div>
 
-          <!-- More Projects CTA -->
-          <div class="project-card-more reveal-up" style="--delay: 2">
-            <div class="more-inner">
-              <div class="more-icon">+</div>
-              <p class="font-display font-semibold text-xl text-white/80">
-                More Projects
-              </p>
-              <p class="text-white/40 text-sm mt-2">View all on GitHub</p>
-              <a
-                href="https://github.com/jayedrjp"
-                target="_blank"
-                class="btn-outline mt-6"
-                >GitHub Profile</a
+          <!-- Project 6 -->
+          <div class="project-card reveal-up" style="--delay: 2">
+            <div class="project-img-wrap">
+              <div
+                class="project-img project-img-6"
+                style="
+                  background-image: url(&quot;assets/enkryx.png&quot;);
+                "
               >
+                <div class="project-overlay">
+                  <a
+                    href="https://enkryx-bd.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="project-link"
+                    aria-label="Live Demo"
+                    ><svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      /></svg
+                  ></a>
+                  <a
+                    href="https://github.com/jayedrjp/ENKRYX.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="project-link"
+                    aria-label="GitHub"
+                    ><svg
+                      class="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                      /></svg
+                  ></a>
+                </div>
+              </div>
+            </div>
+            <div class="project-content">
+              <h3 class="project-name">ENKRYX</h3>
+              <p class="project-desc">
+                Modern Software Company Platform featuring high-performance
+                landing pages and an intuitive enterprise admin dashboard.
+              </p>
+              <div class="project-tags">
+                <span class="project-tag">React</span>
+                <span class="project-tag">TypeScript</span>
+                <span class="project-tag">Tailwind</span>
+                <span class="project-tag">Supabase</span>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- View More on GitHub -->
+        <div class="text-center mt-12 reveal-up">
+          <a
+            href="https://github.com/jayedrjp"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-outline inline-flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+              />
+            </svg>
+            <span>View More on GitHub</span>
+          </a>
         </div>
       </div>
     </section>
@@ -1058,7 +1105,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">What I Offer</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             My <span class="text-accent">Services</span>
           </h2>
         </div>
@@ -1220,7 +1267,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">Get In Touch</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             Let's Work <span class="text-accent">Together</span>
           </h2>
         </div>

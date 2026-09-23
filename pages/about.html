@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -62,26 +62,29 @@
       };
     </script>
 
+    <script>
+      (function () {
+        try {
+          const savedTheme = localStorage.getItem("arj-theme");
+          const shouldUseDark = savedTheme === "dark";
+          document.documentElement.classList.toggle("dark", shouldUseDark);
+          document.documentElement.classList.toggle("light", !shouldUseDark);
+          document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+        } catch (error) {}
+      })();
+    </script>
+
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body class="overflow-x-hidden">
     <!-- Loading Screen -->
-    <div
-      id="loader"
-      class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0a0a0f]"
-    >
-      <div class="loader-content text-center">
-        <div
-          class="loader-logo font-display font-bold text-4xl text-white mb-6"
-        >
-          <span class="text-accent">AR</span>J
-        </div>
-        <div class="loader-bar">
-          <div class="loader-fill"></div>
-        </div>
-        <p class="font-mono text-xs text-white/40 mt-4">
-          Initializing experience...
-        </p>
+    <div id="loader" class="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div class="loader-content">
+        <img
+          src="../assets/portfolio-loader.svg"
+          alt="Loading portfolio"
+          class="loader-svg"
+        />
       </div>
     </div>
 
@@ -314,12 +317,14 @@
     </div>
 
     <!-- ===== ABOUT SECTION ===== -->
-    <section id="about" class="py-24 relative overflow-hidden">
-      <div class="section-divider"></div>
+    <section
+      id="about"
+      class="page-section pt-36 md:pt-44 pb-24 relative overflow-hidden"
+    >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="section-header reveal-up">
           <span class="section-eyebrow">Who I Am</span>
-          <h2 class="section-title">
+          <h2 class="section-title font-extrabold italic tracking-tight uppercase">
             About <span class="text-accent">Me</span>
           </h2>
         </div>
